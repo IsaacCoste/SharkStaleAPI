@@ -1,0 +1,100 @@
+﻿using Library.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using SharkStyleApi.DAL;
+
+namespace SharkStyleApi.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class ComprasController : ControllerBase
+    {
+        private readonly Contexto _context;
+
+        public ComprasController(Contexto context)
+        {
+            _context = context;
+        }
+
+        // GET: api/Compras
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Compras>>> GetCompras()
+        {
+            return await _context.Compras.ToListAsync();
+        }
+
+        // GET: api/Compras/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Compras>> GetCompras(int id)
+        {
+            var compra = await _context.Compras.FindAsync(id);
+
+            if (compra == null)
+            {
+                return NotFound();
+            }
+
+            return compra;
+        }
+
+        // PUT: api/Compras/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutCompras(int id, Compras compra)
+        {
+            if (id != compra.CompraId)
+            {
+                return BadRequest();
+            }
+
+            _context.Entry(compra).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!ComprasExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
+        // POST: api/Compras
+        [HttpPost]
+        public async Task<ActionResult<Compras>> PostCompras(Compras compra)
+        {
+            _context.Compras.Add(compra);
+            await _context.SaveChangesAsync();
+            return Ok(compra);
+        }
+
+        // DELETE: api/Compras/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteCompras(int id)
+        {
+            var compra = await _context.Compras.FindAsync(id);
+            if (compra == null)
+            {
+                return NotFound();
+            }
+
+            _context.Compras.Remove(compra);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        private bool ComprasExists(int id)
+        {
+            return _context.Compras.Any(e => e.CompraId == id);
+        }
+    }
+}
