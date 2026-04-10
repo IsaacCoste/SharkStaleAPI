@@ -17,18 +17,29 @@ public class Program
         builder.Services.AddDbContext<Contexto>(options =>
             options.UseNpgsql(ConStr));
 
-        var app = builder.Build();
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", builder =>
+                {
+                    builder.AllowAnyOrigin()
+                           .AllowAnyMethod()
+                           .AllowAnyHeader();
+                });
+            });
+
+            var app = builder.Build();
 
             app.UseSwagger();
-            app.UseSwaggerUI();
-        
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "SharkStyle API v1");
+                c.RoutePrefix = "swagger"; // Swagger estará en /swagger
+            });
 
-        app.UseHttpsRedirection();
-
-        app.UseAuthorization();
-
-        app.MapControllers();
-
-        app.Run();
+            app.UseCors("AllowAll");
+            app.UseHttpsRedirection();
+            app.UseAuthorization();
+            app.MapControllers();
+            app.Run();
     }
 }
