@@ -1,7 +1,7 @@
-﻿using Library.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SharkStyleApi.DAL;
+using SharkStyleApi.data.Models;
 
 namespace SharkStyleApi.Controllers
 {
@@ -16,85 +16,102 @@ namespace SharkStyleApi.Controllers
             _context = context;
         }
 
-        // GET: api/Compras
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Compras>>> GetCompras()
+        // POST: api/Compras/Checkout
+        [HttpPost("Checkout")]
+        public async Task<IActionResult> Checkout([FromBody] CheckoutRequest request)
         {
-            return await _context.Compras.ToListAsync();
-        }
+            var carrito = await _context.Carritos
+                .Include(c => c.Detalles)
+                    .ThenInclude(d => d.DetalleProducto)
+                .FirstOrDefaultAsync(c => c.CarritoId == request.CarritoId && !c.Pagado);
 
-        // GET: api/Compras/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Compras>> GetCompras(int id)
-        {
-            var compra = await _context.Compras.FindAsync(id);
+            if (carrito == null) return NotFound(new { message = "Carrito no encontrado o ya pagado." });
 
-            if (compra == null)
+            // Validate all items stock
+            foreach (var item in carrito.Detalles)
             {
-                return NotFound();
+                if (item.DetalleProducto.Existencia < item.Cantidad)
+                {
+                    return BadRequest(new { message = $"Stock insuficiente para el producto {item.DetalleProductoId}." });
+                }
             }
 
-            return compra;
-        }
-
-        // PUT: api/Compras/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutCompras(int id, Compras compra)
-        {
-            if (id != compra.CompraId)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(compra).State = EntityState.Modified;
-
+            using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
+                var compra = new Compra
+                {
+                    UsuarioId = carrito.UsuarioId,
+                    MetodoPagoId = request.MetodoPagoId,
+                    Total = carrito.Detalles.Sum(d => d.Cantidad * d.Precio),
+                    Fecha = DateTime.Now
+                };
+
+                _context.Compras.Add(compra);
                 await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ComprasExists(id))
+
+                foreach (var item in carrito.Detalles)
                 {
-                    return NotFound();
+                    // Register detail
+                    var detalleCompra = new DetalleCompra
+                    {
+                        CompraId = compra.CompraId,
+                        DetalleProductoId = item.DetalleProductoId,
+                        Cantidad = item.Cantidad,
+                        Precio = item.Precio
+                    };
+                    _context.DetallesCompra.Add(detalleCompra);
+
+                    // Update inventory
+                    item.DetalleProducto.Existencia -= item.Cantidad;
                 }
-                else
-                {
-                    throw;
-                }
+
+                // Mark cart as paid
+                carrito.Pagado = true;
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Ok(new { message = "Compra realizada con éxito.", compraId = compra.CompraId });
             }
-
-            return NoContent();
-        }
-
-        // POST: api/Compras
-        [HttpPost]
-        public async Task<ActionResult<Compras>> PostCompras(Compras compra)
-        {
-            _context.Compras.Add(compra);
-            await _context.SaveChangesAsync();
-            return Ok(compra);
-        }
-
-        // DELETE: api/Compras/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteCompras(int id)
-        {
-            var compra = await _context.Compras.FindAsync(id);
-            if (compra == null)
+            catch (Exception ex)
             {
-                return NotFound();
+                await transaction.RollbackAsync();
+                return StatusCode(500, new { message = "Error al procesar la compra.", error = ex.Message });
             }
-
-            _context.Compras.Remove(compra);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
         }
 
-        private bool ComprasExists(int id)
+        // GET: api/Compras/Usuario/5
+        [HttpGet("Usuario/{usuarioId}")]
+        public async Task<IActionResult> GetHistorial(int usuarioId)
         {
-            return _context.Compras.Any(e => e.CompraId == id);
+            var historial = await _context.Compras
+                .Include(c => c.Detalles)
+                    .ThenInclude(dc => dc.DetalleProducto)
+                        .ThenInclude(dp => dp.Producto)
+                .Where(c => c.UsuarioId == usuarioId)
+                .OrderByDescending(c => c.Fecha)
+                .Select(c => new
+                {
+                    c.CompraId,
+                    c.Fecha,
+                    c.Total,
+                    Detalles = c.Detalles.Select(dc => new
+                    {
+                        dc.DetalleProducto.Producto.Titulo,
+                        dc.Cantidad,
+                        dc.Precio
+                    })
+                })
+                .ToListAsync();
+
+            return Ok(historial);
         }
+    }
+
+    public class CheckoutRequest
+    {
+        public int CarritoId { get; set; }
+        public int MetodoPagoId { get; set; }
     }
 }
