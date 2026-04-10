@@ -2,8 +2,8 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SharkStyleApi.DAL;
 
 #nullable disable
@@ -18,205 +18,406 @@ namespace SharkStyleApi.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "8.0.10")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Library.Models.Carritos", b =>
+            modelBuilder.Entity("SharkStyleApi.data.Models.Carrito", b =>
                 {
                     b.Property<int>("CarritoId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CarritoId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CarritoId"));
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("Pagado")
+                        .HasColumnType("boolean");
 
                     b.Property<int>("UsuarioId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("CarritoId");
+
+                    b.HasIndex("UsuarioId");
 
                     b.ToTable("Carritos");
                 });
 
-            modelBuilder.Entity("Library.Models.Categorias", b =>
+            modelBuilder.Entity("SharkStyleApi.data.Models.Categoria", b =>
                 {
                     b.Property<int>("CategoriaId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CategoriaId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CategoriaId"));
 
                     b.Property<string>("Imagen")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("CategoriaId");
 
                     b.ToTable("Categorias");
                 });
 
-            modelBuilder.Entity("Library.Models.Compras", b =>
+            modelBuilder.Entity("SharkStyleApi.data.Models.Compra", b =>
                 {
                     b.Property<int>("CompraId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CompraId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CompraId"));
 
-                    b.Property<double>("Total")
-                        .HasColumnType("float");
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("MetodoPagoId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Total")
+                        .HasColumnType("numeric");
 
                     b.Property<int>("UsuarioId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("CompraId");
+
+                    b.HasIndex("MetodoPagoId");
+
+                    b.HasIndex("UsuarioId");
 
                     b.ToTable("Compras");
                 });
 
-            modelBuilder.Entity("Library.Models.DetallesCarrito", b =>
+            modelBuilder.Entity("SharkStyleApi.data.Models.DetalleCarrito", b =>
                 {
                     b.Property<int>("DetalleCarritoId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DetalleCarritoId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("DetalleCarritoId"));
 
                     b.Property<int>("Cantidad")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("CarritoId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    b.Property<int?>("CarritosCarritoId")
-                        .HasColumnType("int");
+                    b.Property<int>("DetalleProductoId")
+                        .HasColumnType("integer");
 
-                    b.Property<int>("ProductoId")
-                        .HasColumnType("int");
+                    b.Property<decimal>("Precio")
+                        .HasColumnType("numeric");
 
                     b.HasKey("DetalleCarritoId");
 
-                    b.HasIndex("CarritosCarritoId");
+                    b.HasIndex("CarritoId");
+
+                    b.HasIndex("DetalleProductoId");
 
                     b.ToTable("DetallesCarrito");
                 });
 
-            modelBuilder.Entity("Library.Models.DetallesCompra", b =>
+            modelBuilder.Entity("SharkStyleApi.data.Models.DetalleCompra", b =>
                 {
                     b.Property<int>("DetalleCompraId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DetalleCompraId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("DetalleCompraId"));
 
                     b.Property<int>("Cantidad")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("CompraId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    b.Property<int?>("ComprasCompraId")
-                        .HasColumnType("int");
+                    b.Property<int>("DetalleProductoId")
+                        .HasColumnType("integer");
 
-                    b.Property<int>("ProductoId")
-                        .HasColumnType("int");
+                    b.Property<decimal>("Precio")
+                        .HasColumnType("numeric");
 
                     b.HasKey("DetalleCompraId");
 
-                    b.HasIndex("ComprasCompraId");
+                    b.HasIndex("CompraId");
+
+                    b.HasIndex("DetalleProductoId");
 
                     b.ToTable("DetallesCompra");
                 });
 
-            modelBuilder.Entity("Library.Models.Productos", b =>
+            modelBuilder.Entity("SharkStyleApi.data.Models.DetalleProducto", b =>
+                {
+                    b.Property<int>("DetalleProductoId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("DetalleProductoId"));
+
+                    b.Property<int>("Existencia")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ProductoId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TallaId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("DetalleProductoId");
+
+                    b.HasIndex("ProductoId");
+
+                    b.HasIndex("TallaId");
+
+                    b.ToTable("DetallesProducto");
+                });
+
+            modelBuilder.Entity("SharkStyleApi.data.Models.MetodoPago", b =>
+                {
+                    b.Property<int>("MetodoPagoId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MetodoPagoId"));
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("MetodoPagoId");
+
+                    b.ToTable("MetodosPago");
+                });
+
+            modelBuilder.Entity("SharkStyleApi.data.Models.Producto", b =>
                 {
                     b.Property<int>("ProductoId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductoId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ProductoId"));
 
-                    b.Property<string>("Categoria")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("CategoriaId")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Descripcion")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
-                    b.Property<int>("Existencia")
-                        .HasColumnType("int");
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Imagen")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
-                    b.Property<double>("Impuesto")
-                        .HasColumnType("float");
+                    b.Property<decimal>("Impuesto")
+                        .HasColumnType("numeric");
 
-                    b.Property<double>("Precio")
-                        .HasColumnType("float");
+                    b.Property<decimal>("Precio")
+                        .HasColumnType("numeric");
 
                     b.Property<string>("Titulo")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("ProductoId");
+
+                    b.HasIndex("CategoriaId");
 
                     b.ToTable("Productos");
                 });
 
-            modelBuilder.Entity("Library.Models.Usuarios", b =>
+            modelBuilder.Entity("SharkStyleApi.data.Models.Talla", b =>
+                {
+                    b.Property<int>("TallaId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("TallaId"));
+
+                    b.Property<string>("Medida")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("TallaId");
+
+                    b.ToTable("Tallas");
+                });
+
+            modelBuilder.Entity("SharkStyleApi.data.Models.Usuario", b =>
                 {
                     b.Property<int>("UsuarioId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UsuarioId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("UsuarioId"));
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
-                    b.Property<string>("Password")
+                    b.Property<string>("PasswordHash")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("UsuarioId");
 
                     b.ToTable("Usuarios");
                 });
 
-            modelBuilder.Entity("Library.Models.DetallesCarrito", b =>
+            modelBuilder.Entity("SharkStyleApi.data.Models.Carrito", b =>
                 {
-                    b.HasOne("Library.Models.Carritos", null)
-                        .WithMany("DetallesCarrito")
-                        .HasForeignKey("CarritosCarritoId");
+                    b.HasOne("SharkStyleApi.data.Models.Usuario", "Usuario")
+                        .WithMany("Carritos")
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Usuario");
                 });
 
-            modelBuilder.Entity("Library.Models.DetallesCompra", b =>
+            modelBuilder.Entity("SharkStyleApi.data.Models.Compra", b =>
                 {
-                    b.HasOne("Library.Models.Compras", null)
-                        .WithMany("DetallesCompra")
-                        .HasForeignKey("ComprasCompraId");
+                    b.HasOne("SharkStyleApi.data.Models.MetodoPago", "MetodoPago")
+                        .WithMany("Compras")
+                        .HasForeignKey("MetodoPagoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SharkStyleApi.data.Models.Usuario", "Usuario")
+                        .WithMany("Compras")
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MetodoPago");
+
+                    b.Navigation("Usuario");
                 });
 
-            modelBuilder.Entity("Library.Models.Carritos", b =>
+            modelBuilder.Entity("SharkStyleApi.data.Models.DetalleCarrito", b =>
                 {
-                    b.Navigation("DetallesCarrito");
+                    b.HasOne("SharkStyleApi.data.Models.Carrito", "Carrito")
+                        .WithMany("Detalles")
+                        .HasForeignKey("CarritoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SharkStyleApi.data.Models.DetalleProducto", "DetalleProducto")
+                        .WithMany()
+                        .HasForeignKey("DetalleProductoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Carrito");
+
+                    b.Navigation("DetalleProducto");
                 });
 
-            modelBuilder.Entity("Library.Models.Compras", b =>
+            modelBuilder.Entity("SharkStyleApi.data.Models.DetalleCompra", b =>
                 {
-                    b.Navigation("DetallesCompra");
+                    b.HasOne("SharkStyleApi.data.Models.Compra", "Compra")
+                        .WithMany("Detalles")
+                        .HasForeignKey("CompraId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SharkStyleApi.data.Models.DetalleProducto", "DetalleProducto")
+                        .WithMany()
+                        .HasForeignKey("DetalleProductoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Compra");
+
+                    b.Navigation("DetalleProducto");
+                });
+
+            modelBuilder.Entity("SharkStyleApi.data.Models.DetalleProducto", b =>
+                {
+                    b.HasOne("SharkStyleApi.data.Models.Producto", "Producto")
+                        .WithMany("Detalles")
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SharkStyleApi.data.Models.Talla", "Talla")
+                        .WithMany("Detalles")
+                        .HasForeignKey("TallaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Producto");
+
+                    b.Navigation("Talla");
+                });
+
+            modelBuilder.Entity("SharkStyleApi.data.Models.Producto", b =>
+                {
+                    b.HasOne("SharkStyleApi.data.Models.Categoria", "Categoria")
+                        .WithMany("Productos")
+                        .HasForeignKey("CategoriaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Categoria");
+                });
+
+            modelBuilder.Entity("SharkStyleApi.data.Models.Carrito", b =>
+                {
+                    b.Navigation("Detalles");
+                });
+
+            modelBuilder.Entity("SharkStyleApi.data.Models.Categoria", b =>
+                {
+                    b.Navigation("Productos");
+                });
+
+            modelBuilder.Entity("SharkStyleApi.data.Models.Compra", b =>
+                {
+                    b.Navigation("Detalles");
+                });
+
+            modelBuilder.Entity("SharkStyleApi.data.Models.MetodoPago", b =>
+                {
+                    b.Navigation("Compras");
+                });
+
+            modelBuilder.Entity("SharkStyleApi.data.Models.Producto", b =>
+                {
+                    b.Navigation("Detalles");
+                });
+
+            modelBuilder.Entity("SharkStyleApi.data.Models.Talla", b =>
+                {
+                    b.Navigation("Detalles");
+                });
+
+            modelBuilder.Entity("SharkStyleApi.data.Models.Usuario", b =>
+                {
+                    b.Navigation("Carritos");
+
+                    b.Navigation("Compras");
                 });
 #pragma warning restore 612, 618
         }
