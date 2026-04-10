@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using SharkStyleApi.data.Models;
+using SharkStyleApi.Models;
 
 namespace SharkStyleApi.DAL
 

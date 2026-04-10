@@ -21,15 +21,5 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="SharkStyleApi.data\SharkStyleApi.data.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="SharkStyleApi.data\**" />
-    <Content Remove="SharkStyleApi.data\**" />
-    <EmbeddedResource Remove="SharkStyleApi.data\**" />
-    <None Remove="SharkStyleApi.data\**" />
-  </ItemGroup>
 
 </Project>

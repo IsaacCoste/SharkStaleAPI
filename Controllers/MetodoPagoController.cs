@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SharkStyleApi.DAL;
-using SharkStyleApi.data.Models;
+using SharkStyleApi.Models;
 
 namespace SharkStyleApi.Controllers
 {
