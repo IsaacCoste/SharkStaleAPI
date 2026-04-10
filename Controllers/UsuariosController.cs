@@ -1,7 +1,7 @@
-﻿using Library.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SharkStyleApi.DAL;
+using SharkStyleApi.data.Models;
 
 namespace SharkStyleApi.Controllers
 {
@@ -18,83 +18,45 @@ namespace SharkStyleApi.Controllers
 
         // GET: api/Usuarios
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Usuarios>>> GetUsuarios()
+        public async Task<IActionResult> GetUsuarios()
         {
-            return await _context.Usuarios.ToListAsync();
+            var users = await _context.Usuarios
+                .Select(u => new { u.UsuarioId, u.Nombre, u.Email, u.FechaCreacion })
+                .ToListAsync();
+            return Ok(users);
         }
 
         // GET: api/Usuarios/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Usuarios>> GetUsuarios(int id)
+        public async Task<IActionResult> GetUsuario(int id)
         {
-            var usuario = await _context.Usuarios.FindAsync(id);
+            var usuario = await _context.Usuarios
+                .Where(u => u.UsuarioId == id)
+                .Select(u => new { u.UsuarioId, u.Nombre, u.Email, u.FechaCreacion })
+                .FirstOrDefaultAsync();
 
             if (usuario == null)
             {
-                return NotFound();
+                return NotFound(new { message = "Usuario no encontrado." });
             }
 
-            return usuario;
-        }
-
-        // PUT: api/Usuarios/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutUsuarios(int id, Usuarios usuario)
-        {
-            if (id != usuario.UsuarioId)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(usuario).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UsuariosExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
-        // POST: api/Usuarios
-        [HttpPost]
-        public async Task<ActionResult<Usuarios>> PostUsuarios(Usuarios usuario)
-        {
-            _context.Usuarios.Add(usuario);
-            await _context.SaveChangesAsync();
             return Ok(usuario);
         }
 
         // DELETE: api/Usuarios/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUsuarios(int id)
+        public async Task<IActionResult> DeleteUsuario(int id)
         {
             var usuario = await _context.Usuarios.FindAsync(id);
             if (usuario == null)
             {
-                return NotFound();
+                return NotFound(new { message = "Usuario no encontrado." });
             }
 
             _context.Usuarios.Remove(usuario);
             await _context.SaveChangesAsync();
 
-            return NoContent();
-        }
-
-        private bool UsuariosExists(int id)
-        {
-            return _context.Usuarios.Any(e => e.UsuarioId == id);
+            return Ok(new { message = "Usuario eliminado." });
         }
     }
 }
