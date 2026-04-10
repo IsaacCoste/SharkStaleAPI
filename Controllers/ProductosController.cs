@@ -1,7 +1,7 @@
-﻿using Library.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SharkStyleApi.DAL;
+using SharkStyleApi.data.Models;
 
 namespace SharkStyleApi.Controllers
 {
@@ -18,32 +18,78 @@ namespace SharkStyleApi.Controllers
 
         // GET: api/Productos
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Productos>>> GetProductos()
+        public async Task<IActionResult> GetProductos()
         {
-            return await _context.Productos.ToListAsync();
+            var productos = await _context.Productos
+                .Include(p => p.Categoria)
+                .Select(p => new
+                {
+                    p.ProductoId,
+                    p.Titulo,
+                    p.Precio,
+                    p.Descripcion,
+                    p.Imagen,
+                    p.Impuesto,
+                    p.FechaCreacion,
+                    Categoria = p.Categoria.Nombre
+                })
+                .ToListAsync();
+
+            return Ok(productos);
         }
 
         // GET: api/Productos/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Productos>> GetProductos(int id)
+        public async Task<IActionResult> GetProducto(int id)
         {
-            var producto = await _context.Productos.FindAsync(id);
+            var producto = await _context.Productos
+                .Include(p => p.Categoria)
+                .Include(p => p.Detalles)
+                    .ThenInclude(d => d.Talla)
+                .Where(p => p.ProductoId == id)
+                .Select(p => new
+                {
+                    p.ProductoId,
+                    p.Titulo,
+                    p.Precio,
+                    p.Descripcion,
+                    p.Imagen,
+                    p.Impuesto,
+                    p.FechaCreacion,
+                    Categoria = p.Categoria.Nombre,
+                    TallasDisponibles = p.Detalles.Select(d => new
+                    {
+                        d.DetalleProductoId,
+                        Talla = d.Talla.Medida,
+                        d.Existencia
+                    })
+                })
+                .FirstOrDefaultAsync();
 
             if (producto == null)
             {
-                return NotFound();
+                return NotFound(new { message = "Producto no encontrado." });
             }
 
-            return producto;
+            return Ok(producto);
+        }
+
+        // POST: api/Productos
+        [HttpPost]
+        public async Task<IActionResult> PostProducto(Producto producto)
+        {
+            _context.Productos.Add(producto);
+            await _context.SaveChangesAsync();
+            return CreatedAtAction(nameof(GetProducto), new { id = producto.ProductoId }, producto);
         }
 
         // PUT: api/Productos/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutProductos(int id, Productos producto)
+        public async Task<IActionResult> PutProducto(int id, Producto producto)
         {
             if (id != producto.ProductoId)
             {
-                return BadRequest();
+                return BadRequest(new { message = "Id del producto no coincide." });
             }
 
             _context.Entry(producto).State = EntityState.Modified;
@@ -54,9 +100,9 @@ namespace SharkStyleApi.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!ProductosExists(id))
+                if (!_context.Productos.Any(e => e.ProductoId == id))
                 {
-                    return NotFound();
+                    return NotFound(new { message = "Producto no encontrado." });
                 }
                 else
                 {
@@ -67,42 +113,20 @@ namespace SharkStyleApi.Controllers
             return NoContent();
         }
 
-        // POST: api/Productos
-        [HttpPost]
-        public async Task<ActionResult<Productos>> PostProductos(Productos producto)
-        {
-            if (producto.ProductoId <= 0 || !ProductosExists(producto.ProductoId))
-            {
-                _context.Productos.Add(producto);
-            }
-            else
-            {
-                _context.Productos.Update(producto);
-            }
-
-            await _context.SaveChangesAsync();
-            return Ok(producto);
-        }
-
         // DELETE: api/Productos/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteProductos(int id)
+        public async Task<IActionResult> DeleteProducto(int id)
         {
             var producto = await _context.Productos.FindAsync(id);
             if (producto == null)
             {
-                return NotFound();
+                return NotFound(new { message = "Producto no encontrado." });
             }
 
             _context.Productos.Remove(producto);
             await _context.SaveChangesAsync();
 
-            return NoContent();
-        }
-
-        private bool ProductosExists(int id)
-        {
-            return _context.Productos.Any(e => e.ProductoId == id);
+            return Ok(new { message = "Producto eliminado con éxito." });
         }
     }
 }
