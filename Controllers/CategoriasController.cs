@@ -1,7 +1,7 @@
-﻿using Library.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SharkStyleApi.DAL;
+using SharkStyleApi.data.Models;
 
 namespace SharkStyleApi.Controllers
 {
@@ -18,83 +18,54 @@ namespace SharkStyleApi.Controllers
 
         // GET: api/Categorias
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Categorias>>> GetCategorias()
+        public async Task<IActionResult> GetCategorias()
         {
-            return await _context.Categorias.ToListAsync();
+            var categorias = await _context.Categorias
+                .Select(c => new { c.CategoriaId, c.Nombre })
+                .ToListAsync();
+            return Ok(categorias);
         }
 
         // GET: api/Categorias/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Categorias>> GetCategorias(int id)
+        public async Task<IActionResult> GetCategoria(int id)
         {
-            var categoria = await _context.Categorias.FindAsync(id);
+            var categoria = await _context.Categorias
+                .Where(c => c.CategoriaId == id)
+                .Select(c => new { c.CategoriaId, c.Nombre })
+                .FirstOrDefaultAsync();
 
             if (categoria == null)
             {
-                return NotFound();
+                return NotFound(new { message = "Categoría no encontrada." });
             }
 
-            return categoria;
-        }
-
-        // PUT: api/Categorias/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutCategorias(int id, Categorias categoria)
-        {
-            if (id != categoria.CategoriaId)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(categoria).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!CategoriasExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            return Ok(categoria);
         }
 
         // POST: api/Categorias
         [HttpPost]
-        public async Task<ActionResult<Categorias>> PostCategorias(Categorias categoria)
+        public async Task<IActionResult> PostCategoria(Categoria categoria)
         {
             _context.Categorias.Add(categoria);
             await _context.SaveChangesAsync();
-            return Ok(categoria);
+            return CreatedAtAction(nameof(GetCategoria), new { id = categoria.CategoriaId }, categoria);
         }
 
         // DELETE: api/Categorias/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteCategorias(int id)
+        public async Task<IActionResult> DeleteCategoria(int id)
         {
             var categoria = await _context.Categorias.FindAsync(id);
             if (categoria == null)
             {
-                return NotFound();
+                return NotFound(new { message = "Categoría no encontrada." });
             }
 
             _context.Categorias.Remove(categoria);
             await _context.SaveChangesAsync();
 
-            return NoContent();
-        }
-
-        private bool CategoriasExists(int id)
-        {
-            return _context.Categorias.Any(e => e.CategoriaId == id);
+            return Ok(new { message = "Categoría eliminada." });
         }
     }
 }
