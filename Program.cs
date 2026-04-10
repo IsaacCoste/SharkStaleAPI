@@ -17,6 +17,8 @@ public class Program
         builder.Services.AddDbContext<Contexto>(options =>
             options.UseNpgsql(ConStr));
 
+        builder.WebHost.UseUrls("http://*:8080");
+
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowAll", builder =>
@@ -37,7 +39,7 @@ public class Program
             });
 
             app.UseCors("AllowAll");
-            app.UseHttpsRedirection();
+            // app.UseHttpsRedirection();
             app.UseAuthorization();
             app.MapControllers();
             app.Run();

@@ -1,3 +1,6 @@
+[variables]
+  ASPNETCORE_URLS = "http://0.0.0.0:8080"
+
 [phases.setup]
 nixPkgs = ["dotnet-sdk_8"]
 
